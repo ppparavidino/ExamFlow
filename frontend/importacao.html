@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExamFlow — Importação</title>
+    <link rel="stylesheet" href="/frontend/style.css" />
+</head>
+<body>
+    <div class="page">
+        <header class="topo">
+            <div>
+                <h1>📥 Importação de Funcionários</h1>
+                <p id="bem-vindo"></p>
+            </div>
+            <div class="topo-acoes">
+                <a class="btn-link" href="/frontend/dashboard.html">← Dashboard</a>
+                <button type="button" id="btn-sair" class="btn-sair">🚪 Sair</button>
+            </div>
+        </header>
+
+        <section class="lista">
+            <h2>Selecionar PDF do TransNet</h2>
+            
+            <div class="campo">
+                <label for="arquivo-pdf">📄 Arquivo PDF</label>
+                <input type="file" id="arquivo-pdf" accept=".pdf,application/pdf" />
+            </div>
+
+            <div class="acoes-agendar">
+                <button type="button" id="btn-analisar">🔍 Analisar PDF</button>
+                <button type="button" id="btn-confirmar" class="btn-agendar" disabled>
+                    ✅ Confirmar importação
+                </button>
+            </div>
+
+            <p id="msg-importacao" class="mensagem"></p>
+        </section>
+
+        <section class="resumo" id="bloco-resumo" style="display: none;">
+            <div class="card" style="border-left-color: var(--primary);">
+                <span class="card-titulo">📄 Total no PDF</span>
+                <strong id="r-total">0</strong>
+            </div>
+            <div class="card" style="border-left-color: var(--success);">
+                <span class="card-titulo">🆕 Novos</span>
+                <strong id="r-novos" style="color: var(--success);">0</strong>
+            </div>
+            <div class="card" style="border-left-color: var(--warning);">
+                <span class="card-titulo">✏️ Alterados</span>
+                <strong id="r-alterados" style="color: var(--warning);">0</strong>
+            </div>
+            <div class="card" style="border-left-color: var(--danger);">
+                <span class="card-titulo">❌ Ausentes</span>
+                <strong id="r-ausentes" style="color: var(--danger);">0</strong>
+            </div>
+            <div class="card" style="border-left-color: var(--gray-400);">
+                <span class="card-titulo">✓ Iguais</span>
+                <strong id="r-iguais">0</strong>
+            </div>
+        </section>
+
+        <section class="lista" id="bloco-amostras" style="display: none;">
+            <h2>📋 Amostras</h2>
+            <div id="amostras"></div>
+        </section>
+    </div>
+
+    <script src="/frontend/importacao.js"></script>
+</body>
+</html>

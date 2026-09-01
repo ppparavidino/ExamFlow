@@ -1,0 +1,829 @@
+/* ===== IMPORTAÇÃO DE FONTES ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ===== VARIÁVEIS ===== */
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #60a5fa;
+    --primary-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    --success: #10b981;
+    --success-dark: #059669;
+    --danger: #ef4444;
+    --danger-dark: #dc2626;
+    --warning: #f59e0b;
+    --warning-dark: #d97706;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+    --gray-900: #0f172a;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    --radius: 12px;
+    --radius-lg: 16px;
+    --transition: all 0.2s ease;
+}
+
+/* ===== RESET ===== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.6;
+}
+
+/* ===== LOGIN / PÁGINAS CENTRALIZADAS ===== */
+.container {
+    background: #ffffff;
+    padding: 2.5rem 3rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    text-align: center;
+    max-width: 440px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+}
+
+.container h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.25rem;
+}
+
+.container p {
+    color: var(--gray-500);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ===== CAMPOS DE FORMULÁRIO ===== */
+.campo {
+    text-align: left;
+    margin: 1.25rem 0;
+}
+
+.campo label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.4rem;
+}
+
+.campo input,
+.campo select {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: var(--transition);
+    background: var(--gray-50);
+}
+
+.campo input:focus,
+.campo select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: #fff;
+}
+
+/* ===== BOTÕES ===== */
+button,
+.btn-link,
+.btn-agendar,
+.btn-realizar,
+.btn-cancelar,
+.btn-pdf,
+.btn-whatsapp,
+.btn-historico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    color: #fff;
+}
+
+button:hover,
+.btn-link:hover,
+.btn-agendar:hover,
+.btn-realizar:hover,
+.btn-cancelar:hover,
+.btn-pdf:hover,
+.btn-whatsapp:hover,
+.btn-historico:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+button:active,
+.btn-link:active {
+    transform: translateY(0);
+}
+
+/* Botão primário */
+button[type="submit"],
+button:not(.btn-sair):not(.btn-secundario):not(.btn-pagina):not(.btn-agendar):not(.btn-realizar):not(.btn-cancelar):not(.btn-pdf):not(.btn-whatsapp):not(.btn-historico):not(.btn-link) {
+    background: var(--primary-gradient);
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    width: 100%;
+}
+
+button[type="submit"]:hover {
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    transform: translateY(-2px);
+}
+
+/* ===== BOTÕES ESPECÍFICOS ===== */
+.btn-sair {
+    background: var(--danger);
+    padding: 0.5rem 1.2rem;
+    font-size: 0.85rem;
+    width: auto;
+}
+
+.btn-sair:hover {
+    background: var(--danger-dark);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-link {
+    background: var(--primary-gradient);
+    padding: 0.5rem 1.2rem;
+    font-size: 0.85rem;
+}
+
+.btn-link:hover {
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-agendar {
+    background: var(--success);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+}
+
+.btn-agendar:hover {
+    background: var(--success-dark);
+}
+
+.btn-realizar {
+    background: var(--success);
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+}
+
+.btn-realizar:hover {
+    background: var(--success-dark);
+}
+
+.btn-cancelar {
+    background: var(--danger);
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+}
+
+.btn-cancelar:hover {
+    background: var(--danger-dark);
+}
+
+.btn-pdf {
+    background: #f97316;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+}
+
+.btn-pdf:hover {
+    background: #ea580c;
+}
+
+.btn-whatsapp {
+    background: #25d366;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+}
+
+.btn-whatsapp:hover {
+    background: #1da851;
+}
+
+.btn-historico {
+    background: var(--primary);
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+}
+
+.btn-historico:hover {
+    background: var(--primary-dark);
+}
+
+.btn-secundario {
+    background: var(--gray-400);
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    width: auto;
+}
+
+.btn-secundario:hover {
+    background: var(--gray-500);
+}
+
+/* ===== PAGINAÇÃO ===== */
+.btn-pagina {
+    background: var(--gray-200);
+    color: var(--gray-700);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    min-width: 2.4rem;
+    width: auto;
+}
+
+.btn-pagina:hover:not(:disabled) {
+    background: var(--gray-300);
+}
+
+.btn-pagina.ativa {
+    background: var(--primary-gradient);
+    color: #fff;
+}
+
+.btn-pagina:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagina-ellipsis {
+    padding: 0.4rem 0.2rem;
+    color: var(--gray-400);
+}
+
+/* ===== MENSAGENS ===== */
+.mensagem {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+}
+
+.mensagem.erro {
+    color: var(--danger);
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+
+.mensagem.ok {
+    color: var(--success);
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+}
+
+.mensagem.info {
+    color: var(--primary);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+}
+
+/* ===== STATUS ===== */
+.status {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.sem-celular {
+    color: var(--gray-400);
+    font-size: 0.8rem;
+}
+
+/* ===== LAYOUT INTERNO ===== */
+.page {
+    width: min(1200px, 96vw);
+    margin: 1.5rem auto;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== TOPO ===== */
+.topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.25rem 2rem;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+}
+
+.topo h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+}
+
+.topo p {
+    color: var(--gray-500);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.topo-acoes {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* ===== FILTROS ===== */
+.filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    padding: 1.25rem 2rem;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+}
+
+.filtros label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.filtros select,
+.filtros input {
+    padding: 0.55rem 0.9rem;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: var(--gray-50);
+    transition: var(--transition);
+    min-width: 140px;
+}
+
+.filtros select:focus,
+.filtros input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.filtros button {
+    width: auto;
+    padding: 0.6rem 1.8rem;
+}
+
+/* ===== RESUMO (CARDS) ===== */
+.resumo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem 2rem;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    min-width: 180px;
+    flex: 1;
+    transition: var(--transition);
+    border-left: 4px solid var(--primary);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.card-titulo {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray-500);
+}
+
+.card strong {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--gray-900);
+}
+
+.card .destaque {
+    color: var(--primary);
+}
+
+/* ===== LISTAS ===== */
+.lista {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 1.25rem 2rem 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.lista h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lista h2::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 20px;
+    background: var(--primary-gradient);
+    border-radius: 4px;
+}
+
+/* ===== TABELAS ===== */
+.tabela-wrapper {
+    overflow-x: auto;
+}
+
+.tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.tabela thead {
+    background: var(--primary-gradient);
+}
+
+.tabela th {
+    padding: 0.8rem 1rem;
+    text-align: left;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.tabela td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--gray-100);
+    color: var(--gray-700);
+}
+
+.tabela tbody tr {
+    transition: var(--transition);
+}
+
+.tabela tbody tr:hover {
+    background: var(--gray-50);
+}
+
+.tabela tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ===== PAINEL DE AGENDAMENTO ===== */
+.painel-agendar {
+    margin-top: 1.5rem;
+    padding: 1.5rem 2rem;
+    background: var(--gray-50);
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    animation: fadeIn 0.3s ease;
+}
+
+.painel-agendar h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 0.5rem;
+}
+
+.painel-agendar .campo {
+    max-width: 400px;
+}
+
+.acoes-agendar {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.acoes-agendar button {
+    width: auto;
+    padding: 0.6rem 1.5rem;
+}
+
+/* ===== PAGINAÇÃO ===== */
+.paginacao {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+/* ===== OCULTO ===== */
+.oculto {
+    display: none !important;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 768px) {
+    .container {
+        padding: 2rem 1.5rem;
+    }
+    
+    .topo {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem 1.25rem;
+    }
+    
+    .topo-acoes {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .filtros {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem 1.25rem;
+    }
+    
+    .filtros label {
+        width: 100%;
+    }
+    
+    .filtros select,
+    .filtros input {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .card {
+        min-width: 140px;
+        flex: 1 1 calc(50% - 0.5rem);
+    }
+    
+    .lista {
+        padding: 1rem 1.25rem;
+    }
+    
+    .tabela th,
+    .tabela td {
+        padding: 0.5rem 0.6rem;
+        font-size: 0.8rem;
+    }
+    
+    .resumo {
+        flex-direction: column;
+    }
+    
+    .painel-agendar {
+        padding: 1rem 1.25rem;
+    }
+    
+    .acoes-agendar {
+        flex-direction: column;
+    }
+    
+    .acoes-agendar button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 1.5rem 1rem;
+        margin: 1rem;
+    }
+    
+    .container h1 {
+        font-size: 1.5rem;
+    }
+    
+    .topo h1 {
+        font-size: 1.2rem;
+    }
+    
+    .tabela th,
+    .tabela td {
+        padding: 0.4rem 0.4rem;
+        font-size: 0.7rem;
+    }
+    
+    .card {
+        min-width: 100%;
+    }
+    
+    .btn-link,
+    .btn-sair {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+/* ===== MODAL ===== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    max-width: 700px;
+    width: 94%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-xl);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.modal-header h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin: 0;
+}
+
+.btn-fechar {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 0 0.5rem;
+    width: auto;
+    transition: var(--transition);
+}
+
+.btn-fechar:hover {
+    color: var(--gray-700);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 1.5rem 2rem 2rem;
+}
+
+/* Botão Atualizar no topo */
+.btn-atualizar {
+    background: var(--primary-gradient);
+    color: #fff;
+    padding: 0.5rem 1.2rem;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-atualizar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Resumo dentro do modal */
+#modal-resumo .resumo {
+    margin-bottom: 0;
+}
+
+#modal-resumo .card {
+    padding: 0.8rem 1.2rem;
+    min-width: auto;
+}
+
+#modal-resumo .card strong {
+    font-size: 1.5rem;
+}
+
+/* Responsividade do modal */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 96%;
+        margin: 1rem;
+    }
+    
+    .modal-header {
+        padding: 1rem 1.25rem;
+    }
+    
+    .modal-body {
+        padding: 1rem 1.25rem 1.5rem;
+    }
+    
+    #modal-resumo .resumo {
+        flex-direction: column;
+    }
+    
+    #modal-resumo .card {
+        flex: 1 1 auto;
+    }
+}

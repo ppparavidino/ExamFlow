@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExamFlow — Agendados</title>
+    <link rel="stylesheet" href="/frontend/style.css" />
+</head>
+<body>
+    <div class="page">
+        <header class="topo">
+            <div>
+                <h1>📅 Exames Agendados</h1>
+                <p id="bem-vindo"></p>
+            </div>
+            <div class="topo-acoes">
+                <a class="btn-link" href="/frontend/dashboard.html">← Dashboard</a>
+                <button type="button" id="btn-sair" class="btn-sair">🚪 Sair</button>
+            </div>
+        </header>
+
+        <section class="resumo">
+            <div class="card" style="border-left-color: var(--success);">
+                <span class="card-titulo">📋 Total agendados</span>
+                <strong id="total-agendados" class="destaque" style="color: var(--success);">0</strong>
+            </div>
+        </section>
+
+        <section class="lista">
+            <h2>Lista de Agendamentos</h2>
+            <div class="tabela-wrapper">
+                <div id="tabela-agendados"></div>
+            </div>
+            <div id="paginacao" class="paginacao"></div>
+        </section>
+    </div>
+
+    <script src="/frontend/agendados.js"></script>
+</body>
+</html>

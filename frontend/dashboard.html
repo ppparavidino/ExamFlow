@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExamFlow — Dashboard</title>
+    <link rel="stylesheet" href="/frontend/style.css" />
+</head>
+<body>
+    <div class="page">
+        <header class="topo">
+            <div>
+                <h1>📊 Dashboard</h1>
+                <p id="bem-vindo"></p>
+            </div>
+            <div class="topo-acoes">
+                <!-- ⚠️ BOTÃO COM ID CORRETO -->
+                <button type="button" id="btn-atualizar-funcionarios" class="btn-atualizar">
+                    🔄 Atualizar Funcionários
+                </button>
+                <a class="btn-link" href="/frontend/agendados.html">📅 Agendados</a>
+                <button type="button" id="btn-sair" class="btn-sair">🚪 Sair</button>
+            </div>
+        </header>
+
+        <!-- ===== MODAL DE ATUALIZAÇÃO ===== -->
+        <!-- ⚠️ MODAL COM ID CORRETO -->
+        <div id="modal-atualizacao" class="modal oculto">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🔄 Atualizar Funcionários</h2>
+                    <button type="button" id="btn-fechar-modal" class="btn-fechar">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p style="color: var(--gray-500); margin-bottom: 1rem;">
+                        Selecione o arquivo PDF do TransNet para atualizar a base de funcionários.
+                    </p>
+                    
+                    <div class="campo">
+                        <label for="arquivo-pdf-modal">📄 Arquivo PDF</label>
+                        <input type="file" id="arquivo-pdf-modal" accept=".pdf,application/pdf" />
+                    </div>
+
+                    <div class="acoes-agendar" style="margin-top: 1rem;">
+                        <button type="button" id="btn-analisar-modal">🔍 Analisar</button>
+                        <button type="button" id="btn-confirmar-modal" class="btn-agendar" disabled>
+                            ✅ Confirmar importação
+                        </button>
+                    </div>
+
+                    <div id="modal-resumo" style="display: none; margin-top: 1rem;">
+                        <div class="resumo" id="resumo-cards">
+                            <div class="card" style="border-left-color: var(--primary); flex: 1;">
+                                <span class="card-titulo">📄 Total no PDF</span>
+                                <strong id="r-total-modal">0</strong>
+                            </div>
+                            <div class="card" style="border-left-color: var(--success); flex: 1;">
+                                <span class="card-titulo">🆕 Novos</span>
+                                <strong id="r-novos-modal" style="color: var(--success);">0</strong>
+                            </div>
+                            <div class="card" style="border-left-color: var(--warning); flex: 1;">
+                                <span class="card-titulo">✏️ Alterados</span>
+                                <strong id="r-alterados-modal" style="color: var(--warning);">0</strong>
+                            </div>
+                            <div class="card" style="border-left-color: var(--danger); flex: 1;">
+                                <span class="card-titulo">❌ Ausentes</span>
+                                <strong id="r-ausentes-modal" style="color: var(--danger);">0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p id="msg-modal" class="mensagem"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== FILTROS ===== -->
+        <section class="filtros">
+            <label>
+                📆 Mês
+                <select id="mes"></select>
+            </label>
+            <label>
+                📅 Ano
+                <input type="number" id="ano" min="2020" max="2100" />
+            </label>
+            <button type="button" id="btn-buscar">🔍 Buscar</button>
+        </section>
+
+        <section class="resumo">
+            <div class="card" style="border-left-color: var(--primary);">
+                <span class="card-titulo">📋 Pendentes no mês</span>
+                <strong id="total-pendentes" class="destaque">0</strong>
+            </div>
+        </section>
+
+        <section class="lista">
+            <h2>Exames Pendentes</h2>
+            <div class="tabela-wrapper">
+                <div id="tabela-pendentes"></div>
+            </div>
+
+            <div id="painel-agendar" class="painel-agendar oculto">
+                <h3>📝 Agendar exame</h3>
+                <p id="agendar-funcionario"></p>
+
+                <input type="hidden" id="agendar-id" />
+                <input type="hidden" id="agendar-tipo" />
+                <input type="hidden" id="agendar-prevista" />
+
+                <div class="campo">
+                    <label for="agendar-data">📅 Data</label>
+                    <input type="date" id="agendar-data" required />
+                </div>
+
+                <div class="campo">
+                    <label for="agendar-horario">🕐 Horário</label>
+                    <input type="time" id="agendar-horario" required value="09:00" />
+                </div>
+
+                <div class="campo">
+                    <label for="agendar-local">📍 Local</label>
+                    <input type="text" id="agendar-local" placeholder="Ex: Clínica Saúde" required />
+                </div>
+
+                <div class="acoes-agendar">
+                    <button type="button" id="btn-confirmar-agendar">✅ Confirmar</button>
+                    <button type="button" id="btn-cancelar-agendar" class="btn-secundario">❌ Cancelar</button>
+                </div>
+
+                <p id="agendar-mensagem" class="mensagem"></p>
+            </div>
+        </section>
+
+        <section class="lista">
+            <h2>Últimos Agendamentos</h2>
+            <div class="tabela-wrapper">
+                <div id="tabela-agendados"></div>
+            </div>
+        </section>
+    </div>
+
+    <script src="/frontend/dashboard.js"></script>
+</body>
+</html>

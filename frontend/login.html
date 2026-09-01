@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExamFlow — Login</title>
+    <link rel="stylesheet" href="/frontend/style.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="logo-icon">📋</div>
+        <h1>ExamFlow</h1>
+        <p>Gestão de Exames Periódicos</p>
+
+        <form id="form-login">
+            <div class="campo">
+                <label for="login">👤 Usuário</label>
+                <input type="text" id="login" name="login" required autocomplete="username" placeholder="Digite seu login" />
+            </div>
+
+            <div class="campo">
+                <label for="senha">🔒 Senha</label>
+                <input type="password" id="senha" name="senha" required autocomplete="current-password" placeholder="Digite sua senha" />
+            </div>
+
+            <button type="submit">Entrar</button>
+        </form>
+
+        <p id="mensagem" class="mensagem"></p>
+    </div>
+
+    <script src="/frontend/login.js"></script>
+</body>
+</html>
