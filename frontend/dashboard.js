@@ -60,7 +60,7 @@ async function carregarPendentes() {
 
     try {
         const resposta = await fetch(
-            `http://192.168.254.200:8000/exames/pendentes?ano=${ano}&mes=${mes}`
+            `http://192.168.254.200:8001/exames/pendentes?ano=${ano}&mes=${mes}`
         );
         const dados = await resposta.json();
 
@@ -190,7 +190,7 @@ document.getElementById("btn-confirmar-agendar").addEventListener("click", async
     agendarMsg.className = "mensagem";
 
     try {
-        const resposta = await fetch("http://192.168.254.200:8000/exames/agendar", {
+        const resposta = await fetch("http://192.168.254.200:8001/exames/agendar", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -238,7 +238,7 @@ async function carregarAgendados() {
     container.innerHTML = "<p>Carregando...</p>";
 
     try {
-        const resposta = await fetch("http://192.168.254.200:8000/exames/agendados");
+        const resposta = await fetch("http://192.168.254.200:8001/exames/agendados");
         const dados = await resposta.json();
 
         if (dados.erro) {
@@ -395,7 +395,7 @@ if (btnAnalisarModal) {
         formData.append('arquivo', arquivo);
 
         try {
-            const resposta = await fetch('http://192.168.254.200:8000/importacao/preview', {
+            const resposta = await fetch('http://192.168.254.200:8001/importacao/preview', {
                 method: 'POST',
                 body: formData,
             });
@@ -453,7 +453,7 @@ if (btnConfirmarModal) {
         formData.append('arquivo', arquivoAtualModal);
 
         try {
-            const resposta = await fetch('http://192.168.254.200:8000/importacao/confirmar', {
+            const resposta = await fetch('http://192.168.254.200:8001/importacao/confirmar', {
                 method: 'POST',
                 body: formData,
             });

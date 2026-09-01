@@ -44,7 +44,7 @@ async function carregarAgendados(pagina = 1) {
 
     try {
         const resposta = await fetch(
-            `http://192.168.254.200:8000/exames/agendados?pagina=${pagina}&por_pagina=${POR_PAGINA}`
+            `http://192.168.254.200:8001/exames/agendados?pagina=${pagina}&por_pagina=${POR_PAGINA}`
         );
         const dados = await resposta.json();
 
@@ -84,7 +84,7 @@ async function carregarAgendados(pagina = 1) {
                 ? `<a class="btn-whatsapp" href="${item.whatsapp_link}" target="_blank" rel="noopener">WhatsApp</a>`
                 : `<span class="sem-celular">Sem celular</span>`;
 
-            const botaoPdf = `<a class="btn-pdf" href="http://192.168.254.200:8000/exames/${item.exame_id}/pdf" target="_blank" rel="noopener">PDF</a>`;
+            const botaoPdf = `<a class="btn-pdf" href="http://192.168.254.200:8001/exames/${item.exame_id}/pdf" target="_blank" rel="noopener">PDF</a>`;
 
             // BOTÃO CANCELAR
             const botaoCancelar = `
@@ -146,7 +146,7 @@ async function cancelarExame(exameId, nome) {
     }
 
     try {
-        const resposta = await fetch(`http://192.168.254.200:8000/exames/${exameId}/cancelar`, {
+        const resposta = await fetch(`http://192.168.254.200:8001/exames/${exameId}/cancelar`, {
             method: "PUT"
         });
 
@@ -174,7 +174,7 @@ async function cancelarExame(exameId, nome) {
 // ==========================================================
 async function atualizarTotal() {
     try {
-        const resposta = await fetch("http://192.168.254.200:8000/exames/agendados?pagina=1&por_pagina=1");
+        const resposta = await fetch("http://192.168.254.200:8001/exames/agendados?pagina=1&por_pagina=1");
         const dados = await resposta.json();
         
         const totalEl = document.getElementById("total-agendados");

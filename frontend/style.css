@@ -756,12 +756,12 @@ button[type="submit"]:hover {
     cursor: pointer;
     padding: 0 0.5rem;
     width: auto;
-    transition: var(--transition);
+    transition: color 0.2s ease;
 }
 
 .btn-fechar:hover {
     color: var(--gray-700);
-    transform: rotate(90deg);
+    transform: none;
 }
 
 .modal-body {
