@@ -827,3 +827,30 @@ button[type="submit"]:hover {
         flex: 1 1 auto;
     }
 }
+
+/* ===== BOTÃO CANCELAR ===== */
+.btn-cancelar {
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-cancelar:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-cancelar:active {
+    transform: translateY(0);
+}

@@ -437,6 +437,56 @@ def exames_agendados(pagina: int = 1, por_pagina: int = 20):
         print("ERRO EM EXAMES AGENDADOS:", e)
         return {"erro": f"Falha ao listar agendados: {str(e)}"}
 
+
+# ==========================================================
+# CANCELAR EXAME (versão sem atualizado_em)
+# ==========================================================
+@app.put("/exames/{exame_id}/cancelar")
+def cancelar_exame(exame_id: int):
+    try:
+        conexao = conectar()
+        cursor = conexao.cursor()
+        
+        # Verifica se o exame existe e está agendado
+        cursor.execute(
+            """
+            SELECT e.id, f.nome 
+            FROM exames e
+            INNER JOIN funcionarios f ON f.id = e.funcionario_id
+            WHERE e.id = ? AND e.status = 'AGENDADO'
+            """,
+            (exame_id,)
+        )
+        
+        exame = cursor.fetchone()
+        if not exame:
+            conexao.close()
+            return {"erro": "Exame não encontrado ou já foi realizado/cancelado."}
+        
+        # Atualiza status para CANCELADO (sem atualizado_em)
+        cursor.execute(
+            """
+            UPDATE exames 
+            SET status = 'CANCELADO'
+            WHERE id = ?
+            """,
+            (exame_id,)
+        )
+        
+        conexao.commit()
+        conexao.close()
+        
+        return {
+            "mensagem": f"Exame de {exame[1]} foi CANCELADO com sucesso!",
+            "exame_id": exame_id,
+            "funcionario": exame[1]
+        }
+        
+    except Exception as e:
+        print("ERRO AO CANCELAR EXAME:", e)
+        return {"erro": f"Falha ao cancelar exame: {str(e)}"}
+    
+
     # ==========================================================
 # PDF DE CONVOCAÇÃO
 # ==========================================================
