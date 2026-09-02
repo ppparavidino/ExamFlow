@@ -64,7 +64,7 @@ async function carregarAgendados(pagina = 1) {
 
         if (totalEl) totalEl.textContent = dados.total;
         
-        const confirmados = dados.agendados?.filter(a => a.observacao?.includes('confirmado')) || [];
+        const confirmados = dados.agendados?.filter(a => a.observacao?.includes('Confirmado')) || [];
         if (confirmadosEl) confirmadosEl.textContent = confirmados.length;
 
         if (!dados.agendados || !dados.agendados.length) {
@@ -92,7 +92,7 @@ async function carregarAgendados(pagina = 1) {
         `;
 
         for (const item of dados.agendados) {
-            const confirmado = item.observacao?.includes('confirmado') || false;
+            const confirmado = item.observacao?.includes('Confirmado') || false;
             
             const botaoWhats = item.whatsapp_link
                 ? `<a class="btn-whatsapp" href="${item.whatsapp_link}" target="_blank" rel="noopener">📱 WhatsApp</a>`
@@ -174,6 +174,7 @@ async function confirmarAgendamento(exameId, nome) {
 
         alert(`✅ ${dados.mensagem}`);
         carregarAgendados(paginaAtual);
+        carregarPendentes();
 
     } catch (erro) {
         console.error("Erro ao confirmar:", erro);
@@ -201,10 +202,30 @@ async function cancelarExame(exameId, nome) {
 
         alert(`✅ ${dados.mensagem}`);
         carregarAgendados(paginaAtual);
+        carregarPendentes();
 
     } catch (erro) {
         console.error("Erro ao cancelar:", erro);
         alert("❌ Erro ao cancelar exame.");
+    }
+}
+
+// ==========================================================
+// CARREGAR PENDENTES (para atualizar após confirmar)
+// ==========================================================
+async function carregarPendentes() {
+    try {
+        const mes = document.getElementById("mes")?.value || new Date().getMonth() + 1;
+        const ano = document.getElementById("ano")?.value || new Date().getFullYear();
+        
+        const resposta = await fetch(`${API_URL}/exames/pendentes?ano=${ano}&mes=${mes}`);
+        const dados = await resposta.json();
+        
+        const totalEl = document.getElementById("total-pendentes");
+        if (totalEl) totalEl.textContent = dados.total || 0;
+        
+    } catch (erro) {
+        console.error("Erro ao carregar pendentes:", erro);
     }
 }
 

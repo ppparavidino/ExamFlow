@@ -339,7 +339,7 @@ def agendar_exame(dados: AgendarExame):
 @app.get("/exames/agendados")
 def exames_agendados(pagina: int = 1, por_pagina: int = 20):
     """
-    Lista exames agendados, do mais recente para o mais antigo.
+    Lista exames agendados e confirmados.
     """
     if pagina < 1:
         pagina = 1
@@ -353,7 +353,7 @@ def exames_agendados(pagina: int = 1, por_pagina: int = 20):
         cursor = conexao.cursor()
 
         cursor.execute(
-            "SELECT COUNT(*) FROM exames WHERE status = 'AGENDADO'"
+            "SELECT COUNT(*) FROM exames WHERE status IN ('AGENDADO', 'CONFIRMADO')"
         )
         total = cursor.fetchone()[0]
 
@@ -376,10 +376,11 @@ def exames_agendados(pagina: int = 1, por_pagina: int = 20):
                 e.local_exame,
                 e.status,
                 e.criado_em,
-                e.observacao
+                e.observacao,
+                e.confirmado_em
             FROM exames e
             INNER JOIN funcionarios f ON f.id = e.funcionario_id
-            WHERE e.status = 'AGENDADO'
+            WHERE e.status IN ('AGENDADO', 'CONFIRMADO')
             ORDER BY e.criado_em DESC, e.id DESC
             OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
             """,
@@ -419,6 +420,7 @@ def exames_agendados(pagina: int = 1, por_pagina: int = 20):
                 "local_exame": row[7] or "Dual Saúde",
                 "status": row[8],
                 "observacao": row[10] or "",
+                "confirmado_em": row[11].strftime("%d/%m/%Y %H:%M") if row[11] else None,
                 "whatsapp_link": link,
             })
 
@@ -435,8 +437,6 @@ def exames_agendados(pagina: int = 1, por_pagina: int = 20):
     except Exception as e:
         print("ERRO EM EXAMES AGENDADOS:", e)
         return {"erro": f"Falha ao listar agendados: {str(e)}"}
-
-
 # ==========================================================
 # CANCELAR EXAME (versão sem atualizado_em)
 # ==========================================================
@@ -559,7 +559,7 @@ def exame_pdf(exame_id: int):
 
 
     # ==========================================================
-# CONFIRMAR AGENDAMENTO (enviar mensagem)
+# CONFIRMAR AGENDAMENTO
 # ==========================================================
 @app.put("/exames/{exame_id}/confirmar")
 def confirmar_agendamento(exame_id: int):
@@ -567,24 +567,43 @@ def confirmar_agendamento(exame_id: int):
         conexao = conectar()
         cursor = conexao.cursor()
         
+        # Verifica se o exame existe e está agendado
         cursor.execute(
             """
-            UPDATE exames 
-            SET observacao = 'Mensagem enviada via WhatsApp - confirmado',
-                atualizado_em = GETDATE()
-            WHERE id = ? AND status = 'AGENDADO'
+            SELECT e.id, f.nome 
+            FROM exames e
+            INNER JOIN funcionarios f ON f.id = e.funcionario_id
+            WHERE e.id = ? AND e.status = 'AGENDADO'
             """,
             (exame_id,)
         )
         
-        if cursor.rowcount == 0:
+        exame = cursor.fetchone()
+        if not exame:
             conexao.close()
             return {"erro": "Exame não encontrado ou não está agendado."}
+        
+        # Atualiza status para CONFIRMADO e adiciona observação
+        cursor.execute(
+            """
+            UPDATE exames 
+            SET status = 'CONFIRMADO',
+                observacao = '✅ Confirmado - Mensagem enviada via WhatsApp',
+                confirmado_em = GETDATE(),
+                atualizado_em = GETDATE()
+            WHERE id = ?
+            """,
+            (exame_id,)
+        )
         
         conexao.commit()
         conexao.close()
         
-        return {"mensagem": "✅ Agendamento confirmado e mensagem enviada!"}
+        return {
+            "mensagem": f"✅ Agendamento de {exame[1]} confirmado com sucesso!",
+            "exame_id": exame_id,
+            "funcionario": exame[1]
+        }
         
     except Exception as e:
         print("ERRO AO CONFIRMAR AGENDAMENTO:", e)
