@@ -1,7 +1,7 @@
 // ==========================================================
 // CONFIGURAÇÃO
 // ==========================================================
-const API_URL = "http://192.168.254.200:8001";
+const API_URL = "http://192.168.254.200:8000";
 
 // ==========================================================
 // PROTEÇÃO DE LOGIN
@@ -64,7 +64,7 @@ async function carregarAgendados(pagina = 1) {
 
         if (totalEl) totalEl.textContent = dados.total;
         
-        const confirmados = dados.agendados?.filter(a => a.observacao?.includes('Confirmado')) || [];
+        const confirmados = dados.agendados?.filter(a => a.status === 'CONFIRMADO') || [];
         if (confirmadosEl) confirmadosEl.textContent = confirmados.length;
 
         if (!dados.agendados || !dados.agendados.length) {
@@ -92,7 +92,7 @@ async function carregarAgendados(pagina = 1) {
         `;
 
         for (const item of dados.agendados) {
-            const confirmado = item.observacao?.includes('Confirmado') || false;
+            const confirmado = item.status === 'CONFIRMADO';
             
             const botaoWhats = item.whatsapp_link
                 ? `<a class="btn-whatsapp" href="${item.whatsapp_link}" target="_blank" rel="noopener">📱 WhatsApp</a>`
@@ -103,6 +103,40 @@ async function carregarAgendados(pagina = 1) {
             const botaoConfirmar = confirmado
                 ? `<span style="font-size: 1.5rem;">✅</span>`
                 : `<button type="button" class="btn-confirmar" data-id="${item.exame_id}" data-nome="${item.nome}">📩 Confirmar</button>`;
+
+            // Campo de observação EDITÁVEL
+            const observacaoHtml = `
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 120px;">
+                    <input type="text" 
+                           class="input-observacao" 
+                           data-id="${item.exame_id}"
+                           value="${item.observacao || ''}" 
+                           placeholder="Digite uma observação..."
+                           style="
+                               padding: 4px 6px;
+                               font-size: 0.7rem;
+                               border: 1px solid #d1d5db;
+                               border-radius: 4px;
+                               width: 100%;
+                               min-width: 100px;
+                           ">
+                    <button type="button" 
+                            class="btn-salvar-obs" 
+                            data-id="${item.exame_id}"
+                            style="
+                                background: #6b7280;
+                                color: #fff;
+                                border: none;
+                                border-radius: 4px;
+                                padding: 2px 6px;
+                                font-size: 0.6rem;
+                                cursor: pointer;
+                                width: auto;
+                            ">
+                        💾 Salvar
+                    </button>
+                </div>
+            `;
 
             const botaoCancelar = `
                 <button type="button" class="btn-cancelar" data-id="${item.exame_id}" data-nome="${item.nome}">
@@ -120,7 +154,7 @@ async function carregarAgendados(pagina = 1) {
                     <td>${botaoWhats}</td>
                     <td>${botaoPdf}</td>
                     <td style="text-align: center;">${botaoConfirmar}</td>
-                    <td style="font-size: 0.8rem; max-width: 150px; word-wrap: break-word;">${item.observacao || "—"}</td>
+                    <td>${observacaoHtml}</td>
                     <td>${botaoCancelar}</td>
                 </tr>
             `;
@@ -129,11 +163,33 @@ async function carregarAgendados(pagina = 1) {
         html += "</tbody></table>";
         container.innerHTML = html;
 
+        // Eventos: Confirmar
         container.querySelectorAll('.btn-confirmar').forEach(btn => {
             btn.addEventListener('click', async function() {
                 const exameId = this.dataset.id;
                 const nome = this.dataset.nome;
                 await confirmarAgendamento(exameId, nome);
+            });
+        });
+
+        // Eventos: Salvar Observação
+        container.querySelectorAll('.btn-salvar-obs').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const exameId = this.dataset.id;
+                const input = this.parentElement.querySelector('.input-observacao');
+                const observacao = input ? input.value : '';
+                await salvarObservacao(exameId, observacao);
+            });
+        });
+
+        // Eventos: Enter no campo de observação
+        container.querySelectorAll('.input-observacao').forEach(input => {
+            input.addEventListener('keypress', async function(e) {
+                if (e.key === 'Enter') {
+                    const exameId = this.dataset.id;
+                    const observacao = this.value;
+                    await salvarObservacao(exameId, observacao);
+                }
             });
         });
 
@@ -151,6 +207,42 @@ async function carregarAgendados(pagina = 1) {
         container.innerHTML =
             '<p class="mensagem erro">❌ Não foi possível carregar os agendados.</p>';
         if (totalEl) totalEl.textContent = "0";
+    }
+}
+
+// ==========================================================
+// SALVAR OBSERVAÇÃO
+// ==========================================================
+async function salvarObservacao(exameId, observacao) {
+    try {
+        const resposta = await fetch(`${API_URL}/exames/${exameId}/observacao`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ observacao: observacao })
+        });
+
+        const dados = await resposta.json();
+
+        if (dados.erro) {
+            alert(`❌ Erro: ${dados.erro}`);
+            return;
+        }
+
+        // Feedback visual
+        const btn = document.querySelector(`.btn-salvar-obs[data-id="${exameId}"]`);
+        if (btn) {
+            const textoOriginal = btn.textContent;
+            btn.textContent = '✅ Salvo!';
+            btn.style.background = '#22c55e';
+            setTimeout(() => {
+                btn.textContent = textoOriginal;
+                btn.style.background = '#6b7280';
+            }, 2000);
+        }
+
+    } catch (erro) {
+        console.error("Erro ao salvar observação:", erro);
+        alert("❌ Erro ao salvar observação.");
     }
 }
 
@@ -174,7 +266,6 @@ async function confirmarAgendamento(exameId, nome) {
 
         alert(`✅ ${dados.mensagem}`);
         carregarAgendados(paginaAtual);
-        carregarPendentes();
 
     } catch (erro) {
         console.error("Erro ao confirmar:", erro);
@@ -202,30 +293,10 @@ async function cancelarExame(exameId, nome) {
 
         alert(`✅ ${dados.mensagem}`);
         carregarAgendados(paginaAtual);
-        carregarPendentes();
 
     } catch (erro) {
         console.error("Erro ao cancelar:", erro);
         alert("❌ Erro ao cancelar exame.");
-    }
-}
-
-// ==========================================================
-// CARREGAR PENDENTES (para atualizar após confirmar)
-// ==========================================================
-async function carregarPendentes() {
-    try {
-        const mes = document.getElementById("mes")?.value || new Date().getMonth() + 1;
-        const ano = document.getElementById("ano")?.value || new Date().getFullYear();
-        
-        const resposta = await fetch(`${API_URL}/exames/pendentes?ano=${ano}&mes=${mes}`);
-        const dados = await resposta.json();
-        
-        const totalEl = document.getElementById("total-pendentes");
-        if (totalEl) totalEl.textContent = dados.total || 0;
-        
-    } catch (erro) {
-        console.error("Erro ao carregar pendentes:", erro);
     }
 }
 
