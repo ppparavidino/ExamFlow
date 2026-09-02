@@ -1,4 +1,9 @@
 // ==========================================================
+// CONFIGURAÇÃO
+// ==========================================================
+const API_URL = "http://192.168.254.200:8001";
+
+// ==========================================================
 // PROTEÇÃO DE LOGIN
 // ==========================================================
 const usuarioSalvo = localStorage.getItem("examflow_usuario");
@@ -13,7 +18,9 @@ if (!usuarioSalvo) {
     }
 }
 
-// ----- Sair -----
+// ==========================================================
+// SAIR
+// ==========================================================
 const btnSair = document.getElementById("btn-sair");
 if (btnSair) {
     btnSair.addEventListener("click", () => {
@@ -23,7 +30,7 @@ if (btnSair) {
 }
 
 // ==========================================================
-// PAGINAÇÃO
+// VARIÁVEIS
 // ==========================================================
 const POR_PAGINA = 20;
 let paginaAtual = 1;
@@ -34,6 +41,7 @@ let paginaAtual = 1;
 async function carregarAgendados(pagina = 1) {
     const container = document.getElementById("tabela-agendados");
     const totalEl = document.getElementById("total-agendados");
+    const confirmadosEl = document.getElementById("total-confirmados");
     const paginacaoEl = document.getElementById("paginacao");
 
     if (!container) return;
@@ -44,7 +52,7 @@ async function carregarAgendados(pagina = 1) {
 
     try {
         const resposta = await fetch(
-            `http://192.168.254.200:8001/exames/agendados?pagina=${pagina}&por_pagina=${POR_PAGINA}`
+            `${API_URL}/exames/agendados?pagina=${pagina}&por_pagina=${POR_PAGINA}`
         );
         const dados = await resposta.json();
 
@@ -55,6 +63,9 @@ async function carregarAgendados(pagina = 1) {
         }
 
         if (totalEl) totalEl.textContent = dados.total;
+        
+        const confirmados = dados.agendados?.filter(a => a.observacao?.includes('confirmado')) || [];
+        if (confirmadosEl) confirmadosEl.textContent = confirmados.length;
 
         if (!dados.agendados || !dados.agendados.length) {
             container.innerHTML = "<p>Nenhum exame agendado.</p>";
@@ -69,10 +80,11 @@ async function carregarAgendados(pagina = 1) {
                         <th>Nome</th>
                         <th>Cargo</th>
                         <th>Data</th>
-                        <th>Horário</th>
                         <th>Local</th>
                         <th>WhatsApp</th>
                         <th>PDF</th>
+                        <th>Confirmação</th>
+                        <th>Observação</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -80,20 +92,20 @@ async function carregarAgendados(pagina = 1) {
         `;
 
         for (const item of dados.agendados) {
+            const confirmado = item.observacao?.includes('confirmado') || false;
+            
             const botaoWhats = item.whatsapp_link
-                ? `<a class="btn-whatsapp" href="${item.whatsapp_link}" target="_blank" rel="noopener">WhatsApp</a>`
+                ? `<a class="btn-whatsapp" href="${item.whatsapp_link}" target="_blank" rel="noopener">📱 WhatsApp</a>`
                 : `<span class="sem-celular">Sem celular</span>`;
 
-            const botaoPdf = `<a class="btn-pdf" href="http://192.168.254.200:8001/exames/${item.exame_id}/pdf" target="_blank" rel="noopener">PDF</a>`;
+            const botaoPdf = `<a class="btn-pdf" href="${API_URL}/exames/${item.exame_id}/pdf" target="_blank" rel="noopener">📄 PDF</a>`;
 
-            // BOTÃO CANCELAR
+            const botaoConfirmar = confirmado
+                ? `<span style="font-size: 1.5rem;">✅</span>`
+                : `<button type="button" class="btn-confirmar" data-id="${item.exame_id}" data-nome="${item.nome}">📩 Confirmar</button>`;
+
             const botaoCancelar = `
-                <button 
-                    type="button" 
-                    class="btn-cancelar" 
-                    data-id="${item.exame_id}" 
-                    data-nome="${item.nome}"
-                >
+                <button type="button" class="btn-cancelar" data-id="${item.exame_id}" data-nome="${item.nome}">
                     ❌ Cancelar
                 </button>
             `;
@@ -104,10 +116,11 @@ async function carregarAgendados(pagina = 1) {
                     <td>${item.nome}</td>
                     <td>${item.cargo}</td>
                     <td>${item.data_agendada}</td>
-                    <td>${item.horario}</td>
-                    <td>${item.local_exame || "—"}</td>
+                    <td>${item.local_exame || "Dual Saúde"}</td>
                     <td>${botaoWhats}</td>
                     <td>${botaoPdf}</td>
+                    <td style="text-align: center;">${botaoConfirmar}</td>
+                    <td style="font-size: 0.8rem; max-width: 150px; word-wrap: break-word;">${item.observacao || "—"}</td>
                     <td>${botaoCancelar}</td>
                 </tr>
             `;
@@ -116,9 +129,14 @@ async function carregarAgendados(pagina = 1) {
         html += "</tbody></table>";
         container.innerHTML = html;
 
-        // ==========================================================
-        // EVENTOS DOS BOTÕES CANCELAR
-        // ==========================================================
+        container.querySelectorAll('.btn-confirmar').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const exameId = this.dataset.id;
+                const nome = this.dataset.nome;
+                await confirmarAgendamento(exameId, nome);
+            });
+        });
+
         container.querySelectorAll('.btn-cancelar').forEach(btn => {
             btn.addEventListener('click', async function() {
                 const exameId = this.dataset.id;
@@ -131,22 +149,19 @@ async function carregarAgendados(pagina = 1) {
     } catch (erro) {
         console.error(erro);
         container.innerHTML =
-            '<p class="mensagem erro">Não foi possível carregar os agendados.</p>';
+            '<p class="mensagem erro">❌ Não foi possível carregar os agendados.</p>';
         if (totalEl) totalEl.textContent = "0";
     }
 }
 
 // ==========================================================
-// CANCELAR EXAME
+// CONFIRMAR AGENDAMENTO
 // ==========================================================
-async function cancelarExame(exameId, nome) {
-    // Confirmação antes de cancelar
-    if (!confirm(`❌ Tem certeza que deseja cancelar o exame de ${nome}?`)) {
-        return;
-    }
+async function confirmarAgendamento(exameId, nome) {
+    if (!confirm(`✅ Confirmar agendamento de ${nome}?`)) return;
 
     try {
-        const resposta = await fetch(`http://192.168.254.200:8001/exames/${exameId}/cancelar`, {
+        const resposta = await fetch(`${API_URL}/exames/${exameId}/confirmar`, {
             method: "PUT"
         });
 
@@ -158,36 +173,50 @@ async function cancelarExame(exameId, nome) {
         }
 
         alert(`✅ ${dados.mensagem}`);
-        
-        // Recarrega a lista e atualiza o total
         carregarAgendados(paginaAtual);
-        atualizarTotal();
+
+    } catch (erro) {
+        console.error("Erro ao confirmar:", erro);
+        alert("❌ Erro ao confirmar agendamento.");
+    }
+}
+
+// ==========================================================
+// CANCELAR EXAME
+// ==========================================================
+async function cancelarExame(exameId, nome) {
+    if (!confirm(`❌ Tem certeza que deseja cancelar o exame de ${nome}?`)) return;
+
+    try {
+        const resposta = await fetch(`${API_URL}/exames/${exameId}/cancelar`, {
+            method: "PUT"
+        });
+
+        const dados = await resposta.json();
+
+        if (dados.erro) {
+            alert(`❌ Erro: ${dados.erro}`);
+            return;
+        }
+
+        alert(`✅ ${dados.mensagem}`);
+        carregarAgendados(paginaAtual);
 
     } catch (erro) {
         console.error("Erro ao cancelar:", erro);
-        alert("❌ Erro ao cancelar exame. Verifique a conexão com o servidor.");
+        alert("❌ Erro ao cancelar exame.");
     }
 }
 
 // ==========================================================
-// ATUALIZAR TOTAL
+// RELATÓRIO PDF
 // ==========================================================
-async function atualizarTotal() {
-    try {
-        const resposta = await fetch("http://192.168.254.200:8001/exames/agendados?pagina=1&por_pagina=1");
-        const dados = await resposta.json();
-        
-        const totalEl = document.getElementById("total-agendados");
-        if (totalEl) {
-            totalEl.textContent = dados.total || 0;
-        }
-    } catch (erro) {
-        console.error("Erro ao atualizar total:", erro);
-    }
-}
+document.getElementById("btn-relatorio-pdf")?.addEventListener("click", () => {
+    window.open(`${API_URL}/exames/relatorio-pdf`, "_blank");
+});
 
 // ==========================================================
-// MONTAR PAGINAÇÃO
+// PAGINAÇÃO
 // ==========================================================
 function montarPaginacao(pagina, totalPaginas) {
     const el = document.getElementById("paginacao");

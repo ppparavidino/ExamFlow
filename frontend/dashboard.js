@@ -1,4 +1,9 @@
 // ==========================================================
+// CONFIGURAÇÃO
+// ==========================================================
+const API_URL = "http://192.168.254.200:8001";
+
+// ==========================================================
 // PROTEÇÃO DE LOGIN
 // ==========================================================
 const usuarioSalvo = localStorage.getItem("examflow_usuario");
@@ -48,7 +53,7 @@ nomesMeses.forEach((nome, index) => {
 inputAno.value = hoje.getFullYear();
 
 // ==========================================================
-// BUSCAR PENDENTES
+// BUSCAR PENDENTES (SEM DATA PREVISTA)
 // ==========================================================
 async function carregarPendentes() {
     const mes = selectMes.value;
@@ -60,7 +65,7 @@ async function carregarPendentes() {
 
     try {
         const resposta = await fetch(
-            `http://192.168.254.200:8001/exames/pendentes?ano=${ano}&mes=${mes}`
+            `${API_URL}/exames/pendentes?ano=${ano}&mes=${mes}`
         );
         const dados = await resposta.json();
 
@@ -77,49 +82,84 @@ async function carregarPendentes() {
             return;
         }
 
-        let html = `
-            <table class="tabela">
-                <thead>
-                    <tr>
-                        <th>Matrícula</th>
-                        <th>Nome</th>
-                        <th>Cargo</th>
-                        <th>Tipo</th>
-                        <th>Data prevista</th>
-                        <th>Celular</th>
-                        <th>Ação</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+        // Agrupa por cargo
+        const cargos = {};
+        dados.pendentes.forEach(f => {
+            const cargoKey = f.cargo || "Outros";
+            if (!cargos[cargoKey]) cargos[cargoKey] = [];
+            cargos[cargoKey].push(f);
+        });
 
-        for (const f of dados.pendentes) {
+        let html = "";
+        let totalExibidos = 0;
+
+        // Para cada cargo, cria uma tabela
+        for (const [cargo, funcionarios] of Object.entries(cargos)) {
+            totalExibidos += funcionarios.length;
+            
             html += `
-                <tr>
-                    <td>${f.matricula}</td>
-                    <td>${f.nome}</td>
-                    <td>${f.cargo}</td>
-                    <td>${f.tipo}</td>
-                    <td>${f.data_prevista}</td>
-                    <td>${f.celular || "—"}</td>
-                    <td>
-                        <button
-                            type="button"
-                            class="btn-agendar"
-                            data-id="${f.id}"
-                            data-nome="${f.nome}"
-                            data-tipo="${f.tipo}"
-                            data-prevista="${f.data_prevista}"
-                        >
-                            Agendar
-                        </button>
-                    </td>
-                </tr>
+                <h3 style="margin: 1.5rem 0 0.5rem 0; color: var(--gray-700); font-size: 1rem;">
+                    🏷️ ${cargo} (${funcionarios.length})
+                </h3>
+                <table class="tabela">
+                    <thead>
+                        <tr>
+                            <th>Matrícula</th>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Celular</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            for (const f of funcionarios) {
+                html += `
+                    <tr>
+                        <td>${f.matricula}</td>
+                        <td>${f.nome}</td>
+                        <td><span class="badge-tipo">${f.tipo}</span></td>
+                        <td>${f.celular || "—"}</td>
+                        <td>
+                            <button
+                                type="button"
+                                class="btn-agendar"
+                                data-id="${f.id}"
+                                data-nome="${f.nome}"
+                                data-tipo="${f.tipo}"
+                            >
+                                📝 Agendar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            html += `
+                    </tbody>
+                </table>
             `;
         }
 
-        html += "</tbody></table>";
+        html += `<p style="color: var(--gray-500); font-size: 0.9rem; margin-top: 1rem;">
+            Total: ${totalExibidos} funcionários
+        </p>`;
+
         container.innerHTML = html;
+
+        // Estiliza badges
+        document.querySelectorAll('.badge-tipo').forEach(el => {
+            const texto = el.textContent;
+            if (texto.includes('Oficina')) {
+                el.style.cssText = 'background: #fef3c7; color: #92400e; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block;';
+            } else if (texto.includes('1º Ano')) {
+                el.style.cssText = 'background: #dbeafe; color: #1e40af; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block;';
+            } else {
+                el.style.cssText = 'background: #d1fae5; color: #065f46; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block;';
+            }
+        });
+
     } catch (erro) {
         console.error(erro);
         container.innerHTML =
@@ -143,13 +183,10 @@ const agendarMsg = document.getElementById("agendar-mensagem");
 function abrirPainelAgendar(botao) {
     document.getElementById("agendar-id").value = botao.dataset.id;
     document.getElementById("agendar-tipo").value = botao.dataset.tipo;
-    document.getElementById("agendar-prevista").value = botao.dataset.prevista;
     document.getElementById("agendar-funcionario").textContent =
         `Funcionário: ${botao.dataset.nome}`;
 
     document.getElementById("agendar-data").value = "";
-    document.getElementById("agendar-horario").value = "09:00";
-    document.getElementById("agendar-local").value = "";
     agendarMsg.textContent = "";
     agendarMsg.className = "mensagem";
 
@@ -169,36 +206,39 @@ document.getElementById("btn-cancelar-agendar").addEventListener("click", () => 
     painel.classList.add("oculto");
 });
 
+// ==========================================================
+// AGENDAR EXAME (VERSÃO SIMPLIFICADA)
+// ==========================================================
 document.getElementById("btn-confirmar-agendar").addEventListener("click", async () => {
     const funcionarioId = Number(document.getElementById("agendar-id").value);
     const tipo = document.getElementById("agendar-tipo").value;
-    const dataPrevista = document.getElementById("agendar-prevista").value;
     const dataISO = document.getElementById("agendar-data").value;
-    const horario = document.getElementById("agendar-horario").value;
-    const local = document.getElementById("agendar-local").value.trim();
 
-    if (!dataISO || !horario || !local) {
-        agendarMsg.textContent = "Preencha data, horário e local.";
+    if (!dataISO) {
+        agendarMsg.textContent = "Selecione uma data para o exame.";
         agendarMsg.className = "mensagem erro";
         return;
     }
 
+    // Converte yyyy-mm-dd → dd/mm/aaaa
     const [ano, mes, dia] = dataISO.split("-");
     const dataAgendada = `${dia}/${mes}/${ano}`;
+
+    // Local e horário fixos
+    const local = "Dual Saúde - Rua Almirante Teffé, 669 - Centro, Niterói";
+    const horario = "07:00";
 
     agendarMsg.textContent = "Salvando...";
     agendarMsg.className = "mensagem";
 
     try {
-        const resposta = await fetch("http://192.168.254.200:8001/exames/agendar", {
+        const resposta = await fetch(`${API_URL}/exames/agendar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 funcionario_id: funcionarioId,
-                tipo: tipo.includes("Oficina") || tipo.includes("Ano") || tipo.includes("Anual")
-                    ? "PERIODICO"
-                    : "PERIODICO",
-                data_prevista: dataPrevista,
+                tipo: "PERIODICO",
+                data_prevista: null,
                 data_agendada: dataAgendada,
                 horario: horario,
                 local_exame: local,
@@ -238,7 +278,7 @@ async function carregarAgendados() {
     container.innerHTML = "<p>Carregando...</p>";
 
     try {
-        const resposta = await fetch("http://192.168.254.200:8001/exames/agendados");
+        const resposta = await fetch(`${API_URL}/exames/agendados`);
         const dados = await resposta.json();
 
         if (dados.erro) {
@@ -258,7 +298,6 @@ async function carregarAgendados() {
                         <th>Matrícula</th>
                         <th>Nome</th>
                         <th>Data</th>
-                        <th>Horário</th>
                         <th>Local</th>
                         <th>WhatsApp</th>
                     </tr>
@@ -268,7 +307,7 @@ async function carregarAgendados() {
 
         for (const e of dados.agendados) {
             const botaoWhats = e.whatsapp_link
-                ? `<a class="btn-whatsapp" href="${e.whatsapp_link}" target="_blank" rel="noopener">WhatsApp</a>`
+                ? `<a class="btn-whatsapp" href="${e.whatsapp_link}" target="_blank" rel="noopener">📱 WhatsApp</a>`
                 : `<span class="sem-celular">Sem celular</span>`;
 
             html += `
@@ -276,8 +315,7 @@ async function carregarAgendados() {
                     <td>${e.matricula}</td>
                     <td>${e.nome}</td>
                     <td>${e.data_agendada}</td>
-                    <td>${e.horario}</td>
-                    <td>${e.local_exame || "—"}</td>
+                    <td>${e.local_exame || "Dual Saúde"}</td>
                     <td>${botaoWhats}</td>
                 </tr>
             `;
@@ -293,10 +331,9 @@ async function carregarAgendados() {
 }
 
 // ==========================================================
-// 🔥 MODAL DE ATUALIZAÇÃO DE FUNCIONÁRIOS (CORRIGIDO)
+// MODAL DE ATUALIZAÇÃO DE FUNCIONÁRIOS
 // ==========================================================
 
-// Verifica se todos os elementos existem antes de usar
 const modal = document.getElementById('modal-atualizacao');
 const btnAbrirModal = document.getElementById('btn-atualizar-funcionarios');
 const btnFecharModal = document.getElementById('btn-fechar-modal');
@@ -308,22 +345,11 @@ const resumoDiv = document.getElementById('modal-resumo');
 
 let arquivoAtualModal = null;
 
-// Verifica se o botão existe
 if (btnAbrirModal) {
-    console.log('✅ Botão "Atualizar Funcionários" encontrado!');
-    
-    btnAbrirModal.addEventListener('click', function(event) {
-        console.log('🔄 Botão clicado!');
-        
-        if (!modal) {
-            console.error('❌ Modal não encontrado!');
-            return;
-        }
-        
+    btnAbrirModal.addEventListener('click', function() {
+        if (!modal) return;
         modal.classList.remove('oculto');
         document.body.style.overflow = 'hidden';
-        
-        // Limpa campos
         if (inputArquivoModal) inputArquivoModal.value = '';
         if (resumoDiv) resumoDiv.style.display = 'none';
         if (btnConfirmarModal) btnConfirmarModal.disabled = true;
@@ -333,11 +359,8 @@ if (btnAbrirModal) {
         }
         arquivoAtualModal = null;
     });
-} else {
-    console.error('❌ Botão "btn-atualizar-funcionarios" não encontrado no HTML!');
 }
 
-// Fechar modal
 function fecharModal() {
     if (modal) {
         modal.classList.add('oculto');
@@ -349,7 +372,6 @@ if (btnFecharModal) {
     btnFecharModal.addEventListener('click', fecharModal);
 }
 
-// Fechar ao clicar fora
 if (modal) {
     modal.addEventListener('click', function(event) {
         if (event.target === modal) {
@@ -365,7 +387,6 @@ function mostrarMsgModal(texto, tipo) {
     }
 }
 
-// Analisar PDF
 if (btnAnalisarModal) {
     btnAnalisarModal.addEventListener('click', async function() {
         if (!inputArquivoModal) {
@@ -395,7 +416,7 @@ if (btnAnalisarModal) {
         formData.append('arquivo', arquivo);
 
         try {
-            const resposta = await fetch('http://192.168.254.200:8001/importacao/preview', {
+            const resposta = await fetch(`${API_URL}/importacao/preview`, {
                 method: 'POST',
                 body: formData,
             });
@@ -407,7 +428,6 @@ if (btnAnalisarModal) {
                 return;
             }
 
-            // Preenche os cards
             const totalEl = document.getElementById('r-total-modal');
             const novosEl = document.getElementById('r-novos-modal');
             const alteradosEl = document.getElementById('r-alterados-modal');
@@ -433,7 +453,6 @@ if (btnAnalisarModal) {
     });
 }
 
-// Confirmar importação
 if (btnConfirmarModal) {
     btnConfirmarModal.addEventListener('click', async function() {
         if (!arquivoAtualModal) {
@@ -453,7 +472,7 @@ if (btnConfirmarModal) {
         formData.append('arquivo', arquivoAtualModal);
 
         try {
-            const resposta = await fetch('http://192.168.254.200:8001/importacao/confirmar', {
+            const resposta = await fetch(`${API_URL}/importacao/confirmar`, {
                 method: 'POST',
                 body: formData,
             });

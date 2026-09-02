@@ -854,3 +854,67 @@ button[type="submit"]:hover {
 .btn-cancelar:active {
     transform: translateY(0);
 }
+/* ===== BOTÃO CONFIRMAR ===== */
+.btn-confirmar {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-confirmar:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* ===== INFO AGENDAMENTO ===== */
+.info-agendamento {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+}
+
+.info-agendamento p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    color: #166534;
+}
+
+.info-agendamento strong {
+    color: #064e3b;
+}
+
+/* ===== BOTÃO RELATÓRIO PDF ===== */
+.btn-pdf {
+    background: #f97316;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-pdf:hover {
+    background: #ea580c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}

@@ -37,17 +37,13 @@ def calcular_proximo_exame(
 ) -> tuple[date, str]:
     """
     Calcula a próxima data de exame e o tipo.
-
     Retorna: (data_proximo_exame, tipo)
-      tipo = "Semestral (Oficina)" | "Semestral (1º Ano)" | "Anual"
     """
     oficina = eh_cargo_oficina(cargo)
 
-    # Primeiro exame: sempre 6 meses após a admissão
     proximo = data_admissao + relativedelta(months=6)
 
     if oficina:
-        # Oficina: avança de 6 em 6 meses até chegar no mês de referência (ou depois)
         while proximo.year < data_referencia.year or (
             proximo.year == data_referencia.year
             and proximo.month < data_referencia.month
@@ -55,12 +51,10 @@ def calcular_proximo_exame(
             proximo += relativedelta(months=6)
         tipo = "Semestral (Oficina)"
     else:
-        # Ainda está no primeiro ciclo de 6 meses?
         if proximo.year < data_referencia.year or (
             proximo.year == data_referencia.year
             and proximo.month < data_referencia.month
         ):
-            # Já passou o 1º semestre → passa a ser anual
             proximo = data_admissao + relativedelta(years=1)
             while proximo.year < data_referencia.year or (
                 proximo.year == data_referencia.year
@@ -72,6 +66,7 @@ def calcular_proximo_exame(
             tipo = "Semestral (1º Ano)"
 
     return proximo, tipo
+
 
 def listar_pendentes_do_mes(ano: int, mes: int) -> list[dict]:
     """
@@ -87,7 +82,7 @@ def listar_pendentes_do_mes(ano: int, mes: int) -> list[dict]:
         SELECT id, matricula, nome, cargo, data_admissao, celular
         FROM funcionarios
         WHERE ativo = 1
-        ORDER BY nome
+        ORDER BY cargo, nome
         """
     )
 
@@ -101,23 +96,35 @@ def listar_pendentes_do_mes(ano: int, mes: int) -> list[dict]:
         data_admissao = row[4]
         celular = row[5]
 
-        # pyodbc pode devolver datetime — normaliza para date
         if hasattr(data_admissao, "date"):
             data_admissao = data_admissao.date()
 
         proximo, tipo = calcular_proximo_exame(data_admissao, data_ref, cargo)
 
         if proximo.month == mes and proximo.year == ano:
-            pendentes.append({
-                "id": func_id,
-                "matricula": matricula,
-                "nome": nome,
-                "cargo": cargo,
-                "data_admissao": data_admissao.strftime("%d/%m/%Y"),
-                "celular": celular,
-                "data_prevista": proximo.strftime("%d/%m/%Y"),
-                "tipo": tipo,
-            })
+            # Verifica se já tem exame agendado ou confirmado
+            cursor2 = conexao.cursor()
+            cursor2.execute(
+                """
+                SELECT COUNT(*) FROM exames 
+                WHERE funcionario_id = ? 
+                AND status IN ('AGENDADO', 'CONFIRMADO')
+                """,
+                (func_id,)
+            )
+            ja_agendado = cursor2.fetchone()[0] > 0
+            cursor2.close()
+            
+            # Se já tem exame agendado, não aparece na lista de pendentes
+            if not ja_agendado:
+                pendentes.append({
+                    "id": func_id,
+                    "matricula": matricula,
+                    "nome": nome,
+                    "cargo": cargo,
+                    "celular": celular,
+                    "tipo": tipo,
+                })
 
     conexao.close()
     return pendentes

@@ -333,14 +333,13 @@ def agendar_exame(dados: AgendarExame):
         return {"erro": f"Falha ao agendar: {str(e)}"}
 
 
-    # ==========================================================
+   # ==========================================================
 # EXAMES AGENDADOS + LINK WHATSAPP
 # ==========================================================
 @app.get("/exames/agendados")
 def exames_agendados(pagina: int = 1, por_pagina: int = 20):
     """
     Lista exames agendados, do mais recente para o mais antigo.
-    Exemplo: /exames/agendados?pagina=1&por_pagina=20
     """
     if pagina < 1:
         pagina = 1
@@ -376,7 +375,8 @@ def exames_agendados(pagina: int = 1, por_pagina: int = 20):
                 e.horario,
                 e.local_exame,
                 e.status,
-                e.criado_em
+                e.criado_em,
+                e.observacao
             FROM exames e
             INNER JOIN funcionarios f ON f.id = e.funcionario_id
             WHERE e.status = 'AGENDADO'
@@ -406,8 +406,6 @@ def exames_agendados(pagina: int = 1, por_pagina: int = 20):
                 celular=row[4],
                 nome=row[2],
                 data_agendada=data_str,
-                horario=horario_str,
-                local_exame=row[7] or "",
             )
 
             lista.append({
@@ -418,8 +416,9 @@ def exames_agendados(pagina: int = 1, por_pagina: int = 20):
                 "celular": row[4],
                 "data_agendada": data_str,
                 "horario": horario_str,
-                "local_exame": row[7],
+                "local_exame": row[7] or "Dual Saúde",
                 "status": row[8],
+                "observacao": row[10] or "",
                 "whatsapp_link": link,
             })
 
@@ -556,6 +555,153 @@ def exame_pdf(exame_id: int):
     except Exception as e:
         print("ERRO AO GERAR PDF:", e)
         return {"erro": f"Falha ao gerar PDF: {str(e)}"}
+
+
+
+    # ==========================================================
+# CONFIRMAR AGENDAMENTO (enviar mensagem)
+# ==========================================================
+@app.put("/exames/{exame_id}/confirmar")
+def confirmar_agendamento(exame_id: int):
+    try:
+        conexao = conectar()
+        cursor = conexao.cursor()
+        
+        cursor.execute(
+            """
+            UPDATE exames 
+            SET observacao = 'Mensagem enviada via WhatsApp - confirmado',
+                atualizado_em = GETDATE()
+            WHERE id = ? AND status = 'AGENDADO'
+            """,
+            (exame_id,)
+        )
+        
+        if cursor.rowcount == 0:
+            conexao.close()
+            return {"erro": "Exame não encontrado ou não está agendado."}
+        
+        conexao.commit()
+        conexao.close()
+        
+        return {"mensagem": "✅ Agendamento confirmado e mensagem enviada!"}
+        
+    except Exception as e:
+        print("ERRO AO CONFIRMAR AGENDAMENTO:", e)
+        return {"erro": f"Falha ao confirmar: {str(e)}"}
+
+
+# ==========================================================
+# RELATÓRIO PDF DE TODOS OS AGENDADOS
+# ==========================================================
+@app.get("/exames/relatorio-pdf")
+def relatorio_agendados_pdf():
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib import colors
+        from reportlab.lib.units import cm
+        from datetime import datetime
+        import io
+
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+        cursor.execute(
+            """
+            SELECT 
+                f.matricula,
+                f.nome,
+                f.cargo,
+                e.data_agendada,
+                e.local_exame,
+                e.status,
+                e.observacao
+            FROM exames e
+            INNER JOIN funcionarios f ON f.id = e.funcionario_id
+            WHERE e.status IN ('AGENDADO', 'CONFIRMADO')
+            ORDER BY e.data_agendada, f.nome
+            """
+        )
+
+        dados = cursor.fetchall()
+        conexao.close()
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, 
+                                leftMargin=1*cm, rightMargin=1*cm,
+                                topMargin=1*cm, bottomMargin=1*cm)
+        
+        styles = getSampleStyleSheet()
+        elements = []
+
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            alignment=1,
+            spaceAfter=20
+        )
+        elements.append(Paragraph("RELATÓRIO DE EXAMES AGENDADOS", title_style))
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph(f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+        elements.append(Spacer(1, 10))
+
+        data = [["Matrícula", "Nome", "Cargo", "Data", "Local", "Status", "Obs"]]
+        
+        for row in dados:
+            data_agendada = row[3].strftime("%d/%m/%Y") if hasattr(row[3], "strftime") else str(row[3])
+            status = row[5]
+            if status == 'AGENDADO':
+                status = '⏳ Pendente'
+            elif status == 'CONFIRMADO':
+                status = '✅ Confirmado'
+            elif status == 'CANCELADO':
+                status = '❌ Cancelado'
+            
+            obs = row[6] or ""
+            if "confirmado" in obs.lower():
+                obs = "✅ Mensagem enviada"
+            
+            data.append([
+                str(row[0]),
+                str(row[1])[:30],
+                str(row[2])[:25],
+                data_agendada,
+                str(row[4])[:30] or "Dual Saúde",
+                status,
+                obs[:20]
+            ])
+
+        table = Table(data, colWidths=[2.5*cm, 5*cm, 4*cm, 2.5*cm, 4*cm, 2.5*cm, 3*cm])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ]))
+
+        elements.append(table)
+        doc.build(elements)
+
+        buffer.seek(0)
+        return Response(
+            content=buffer.read(),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": 'attachment; filename="relatorio_agendados.pdf"'
+            }
+        )
+
+    except Exception as e:
+        print("ERRO NO RELATÓRIO PDF:", e)
+        return {"erro": f"Falha ao gerar relatório: {str(e)}"}
 # Nas próximas etapas:
 # - importação do PDF
 # - dashboard

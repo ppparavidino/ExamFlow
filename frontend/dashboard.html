@@ -14,7 +14,6 @@
                 <p id="bem-vindo"></p>
             </div>
             <div class="topo-acoes">
-                <!-- ⚠️ BOTÃO COM ID CORRETO -->
                 <button type="button" id="btn-atualizar-funcionarios" class="btn-atualizar">
                     🔄 Atualizar Funcionários
                 </button>
@@ -24,7 +23,6 @@
         </header>
 
         <!-- ===== MODAL DE ATUALIZAÇÃO ===== -->
-        <!-- ⚠️ MODAL COM ID CORRETO -->
         <div id="modal-atualizacao" class="modal oculto">
             <div class="modal-content">
                 <div class="modal-header">
@@ -100,31 +98,26 @@
                 <div id="tabela-pendentes"></div>
             </div>
 
+            <!-- Painel de agendamento - versão simplificada -->
             <div id="painel-agendar" class="painel-agendar oculto">
                 <h3>📝 Agendar exame</h3>
                 <p id="agendar-funcionario"></p>
 
                 <input type="hidden" id="agendar-id" />
                 <input type="hidden" id="agendar-tipo" />
-                <input type="hidden" id="agendar-prevista" />
 
                 <div class="campo">
-                    <label for="agendar-data">📅 Data</label>
+                    <label for="agendar-data">📅 Data do Exame</label>
                     <input type="date" id="agendar-data" required />
                 </div>
 
-                <div class="campo">
-                    <label for="agendar-horario">🕐 Horário</label>
-                    <input type="time" id="agendar-horario" required value="09:00" />
-                </div>
-
-                <div class="campo">
-                    <label for="agendar-local">📍 Local</label>
-                    <input type="text" id="agendar-local" placeholder="Ex: Clínica Saúde" required />
+                <div class="info-agendamento">
+                    <p>📍 <strong>Local:</strong> Dual Saúde - Rua Almirante Teffé, 669 - Centro, Niterói</p>
+                    <p>🕐 <strong>Horário:</strong> 07:00 às 15:00 (ordem de chegada)</p>
                 </div>
 
                 <div class="acoes-agendar">
-                    <button type="button" id="btn-confirmar-agendar">✅ Confirmar</button>
+                    <button type="button" id="btn-confirmar-agendar">✅ Confirmar Agendamento</button>
                     <button type="button" id="btn-cancelar-agendar" class="btn-secundario">❌ Cancelar</button>
                 </div>
 

@@ -15,6 +15,7 @@
             </div>
             <div class="topo-acoes">
                 <a class="btn-link" href="/frontend/dashboard.html">← Dashboard</a>
+                <button type="button" id="btn-relatorio-pdf" class="btn-pdf">📄 Relatório PDF</button>
                 <button type="button" id="btn-sair" class="btn-sair">🚪 Sair</button>
             </div>
         </header>
@@ -23,6 +24,10 @@
             <div class="card" style="border-left-color: var(--success);">
                 <span class="card-titulo">📋 Total agendados</span>
                 <strong id="total-agendados" class="destaque" style="color: var(--success);">0</strong>
+            </div>
+            <div class="card" style="border-left-color: var(--primary);">
+                <span class="card-titulo">✅ Confirmados</span>
+                <strong id="total-confirmados" class="destaque" style="color: var(--primary);">0</strong>
             </div>
         </section>
 
