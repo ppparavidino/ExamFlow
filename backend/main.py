@@ -15,7 +15,6 @@ from datetime import datetime
 class AgendarExame(BaseModel):
     funcionario_id: int
     tipo: str = "PERIODICO"
-    data_prevista: str | None = None
     data_agendada: str
     horario: str
     local_exame: str
@@ -200,32 +199,34 @@ def exames_pendentes(ano: int, mes: int):
         return {"erro": f"Falha ao listar pendentes: {str(e)}"}
 
 # ==========================================================
-# AGENDAR EXAME
+# AGENDAR EXAME (CORRIGIDO - SEM data_prevista)
 # ==========================================================
 @app.post("/exames/agendar")
 def agendar_exame(dados: AgendarExame):
     try:
         data_agendada = datetime.strptime(dados.data_agendada, "%d/%m/%Y").date()
         horario = datetime.strptime(dados.horario, "%H:%M").time()
-        data_prevista = None
-        if dados.data_prevista:
-            data_prevista = datetime.strptime(dados.data_prevista, "%d/%m/%Y").date()
+
         conexao = conectar()
         cursor = conexao.cursor()
+        
+        # Verifica se o funcionário existe
         cursor.execute("SELECT id, nome FROM funcionarios WHERE id = ? AND ativo = 1", (dados.funcionario_id,))
         func = cursor.fetchone()
         if not func:
             conexao.close()
             return {"erro": "Funcionário não encontrado ou inativo."}
+        
+        # INSERT SEM data_prevista
         cursor.execute("""
             INSERT INTO exames
-                (funcionario_id, tipo, data_prevista, data_agendada,
-                 horario, local_exame, status, observacao, criado_em)
-            VALUES (?, ?, ?, ?, ?, ?, 'AGENDADO', ?, GETDATE())
-        """, (dados.funcionario_id, dados.tipo, data_prevista, data_agendada,
-              horario, dados.local_exame.strip(), dados.observacao))
+                (funcionario_id, tipo, data_agendada, horario, local_exame, status, observacao, criado_em)
+            VALUES (?, ?, ?, ?, ?, 'AGENDADO', ?, GETDATE())
+        """, (dados.funcionario_id, dados.tipo, data_agendada, horario, dados.local_exame.strip(), dados.observacao))
+        
         conexao.commit()
         conexao.close()
+        
         return {
             "mensagem": "Exame agendado com sucesso.",
             "funcionario": func[1],
@@ -236,6 +237,7 @@ def agendar_exame(dados: AgendarExame):
     except ValueError:
         return {"erro": "Data ou horário em formato inválido. Use dd/mm/aaaa e HH:MM."}
     except Exception as e:
+        print("ERRO AO AGENDAR:", e)
         return {"erro": f"Falha ao agendar: {str(e)}"}
 
 # ==========================================================
@@ -367,38 +369,28 @@ def confirmar_agendamento(exame_id: int):
         return {"erro": f"Falha ao confirmar: {str(e)}"}
 
 # ==========================================================
-# ATUALIZAR OBSERVAÇÃO (CORRIGIDO)
+# ATUALIZAR OBSERVAÇÃO
 # ==========================================================
 @app.put("/exames/{exame_id}/observacao")
 def atualizar_observacao(exame_id: int, dados: AtualizarObservacao):
     try:
         conexao = conectar()
         cursor = conexao.cursor()
-        
-        # Verifica se o exame existe (NÃO seleciona nome da tabela exames)
         cursor.execute("SELECT id FROM exames WHERE id = ?", (exame_id,))
         exame = cursor.fetchone()
         if not exame:
             conexao.close()
             return {"erro": "Exame não encontrado."}
-        
-        # Atualiza a observação
         cursor.execute("""
             UPDATE exames 
             SET observacao = ?,
                 atualizado_em = GETDATE()
             WHERE id = ?
         """, (dados.observacao, exame_id))
-        
         conexao.commit()
         conexao.close()
-        
-        return {
-            "mensagem": "✅ Observação atualizada com sucesso!",
-            "observacao": dados.observacao
-        }
+        return {"mensagem": "✅ Observação atualizada com sucesso!", "observacao": dados.observacao}
     except Exception as e:
-        print("ERRO AO ATUALIZAR OBSERVAÇÃO:", e)
         return {"erro": f"Falha ao atualizar observação: {str(e)}"}
 
 # ==========================================================
@@ -438,12 +430,12 @@ def exame_pdf(exame_id: int):
         return {"erro": f"Falha ao gerar PDF: {str(e)}"}
 
 # ==========================================================
-# RELATÓRIO PDF (CORRIGIDO - TABELA MELHORADA)
+# RELATÓRIO PDF
 # ==========================================================
 @app.get("/exames/relatorio-pdf")
 def relatorio_agendados_pdf():
     try:
-        from reportlab.lib.pagesizes import A4, landscape
+        from reportlab.lib.pagesizes import landscape, A4
         from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.lib import colors
@@ -453,14 +445,7 @@ def relatorio_agendados_pdf():
         conexao = conectar()
         cursor = conexao.cursor()
         cursor.execute("""
-            SELECT 
-                f.matricula, 
-                f.nome, 
-                f.cargo, 
-                e.data_agendada, 
-                e.local_exame, 
-                e.status, 
-                e.observacao
+            SELECT f.matricula, f.nome, f.cargo, e.data_agendada, e.local_exame, e.status, e.observacao
             FROM exames e
             INNER JOIN funcionarios f ON f.id = e.funcionario_id
             WHERE e.status IN ('AGENDADO', 'CONFIRMADO')
@@ -472,7 +457,6 @@ def relatorio_agendados_pdf():
         if not dados:
             return {"erro": "Nenhum exame agendado ou confirmado para gerar relatório."}
 
-        # Usar página em paisagem (landscape) para caber mais colunas
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), 
                                 leftMargin=1*cm, rightMargin=1*cm,
@@ -481,7 +465,6 @@ def relatorio_agendados_pdf():
         styles = getSampleStyleSheet()
         elements = []
 
-        # Título
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
@@ -495,61 +478,49 @@ def relatorio_agendados_pdf():
         elements.append(Paragraph(f"Data de emissão: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
         elements.append(Spacer(1, 10))
 
-        # Cabeçalho da tabela
         data = [["Matrícula", "Nome", "Cargo", "Data", "Local", "Status", "Observação"]]
         
         for row in dados:
-            # Formata a data
             data_agendada = row[3]
             if hasattr(data_agendada, "strftime"):
                 data_str = data_agendada.strftime("%d/%m/%Y")
             else:
                 data_str = str(data_agendada)
             
-            # Formata o status
             status = row[5]
             if status == 'AGENDADO':
                 status_text = '⏳ Pendente'
-                status_color = colors.orange
             elif status == 'CONFIRMADO':
                 status_text = '✅ Confirmado'
-                status_color = colors.green
             elif status == 'CANCELADO':
                 status_text = '❌ Cancelado'
-                status_color = colors.red
             else:
                 status_text = status
-                status_color = colors.black
             
-            # Formata a observação
             obs = row[6] or ""
             if "confirmado" in obs.lower():
                 obs = "✅ Mensagem enviada"
             elif obs == "":
                 obs = "—"
             
-            # Formata o local
             local = row[4] or "Dual Saúde"
-            # Limita o tamanho do local para não quebrar a tabela
             if len(local) > 35:
                 local = local[:35] + "..."
             
             data.append([
-                str(row[0]),  # Matrícula
-                str(row[1])[:30],  # Nome (limitado a 30 caracteres)
-                str(row[2])[:25],  # Cargo (limitado a 25 caracteres)
-                data_str,  # Data
-                local,  # Local
-                status_text,  # Status
-                obs[:25]  # Observação (limitado a 25 caracteres)
+                str(row[0]),
+                str(row[1])[:30],
+                str(row[2])[:25],
+                data_str,
+                local,
+                status_text,
+                obs[:25]
             ])
 
-        # Larguras das colunas
         col_widths = [2.5*cm, 5.5*cm, 4*cm, 2.5*cm, 5*cm, 2.8*cm, 3.5*cm]
         
         table = Table(data, colWidths=col_widths, repeatRows=1)
         table.setStyle(TableStyle([
-            # Cabeçalho
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f4e78')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -557,19 +528,15 @@ def relatorio_agendados_pdf():
             ('FONTSIZE', (0, 0), (-1, 0), 9),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
             ('TOPPADDING', (0, 0), (-1, 0), 8),
-            # Linhas de dados
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -1), 8),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
             ('ALIGN', (0, 1), (-1, -1), 'CENTER'),
-            # Grid
             ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#c0c0c0')),
-            # Padding
             ('TOPPADDING', (0, 1), (-1, -1), 4),
             ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
             ('LEFTPADDING', (0, 0), (-1, -1), 4),
             ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-            # Alinhamento do status
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
 
