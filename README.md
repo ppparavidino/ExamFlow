@@ -60,10 +60,13 @@ uvicorn backend.main:app --reload
 Arquivo `backend/database.py` (igual ao Suporte TI):
 
 ```python
-SERVER = r"PEDRO-JA\SQLEXPRESS"
+SERVER = r".\SQLEXPRESS"
 DATABASE = "ExamFlow"
 DRIVER = "ODBC Driver 18 for SQL Server"
 ```
+
+Defina `EXAMFLOW_DB_SERVER` no ambiente para usar outro servidor SQL sem
+registrar o nome da máquina nos arquivos do projeto.
 
 ## Próximas etapas
 

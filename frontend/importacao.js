@@ -104,7 +104,7 @@ btnAnalisar.addEventListener("click", async () => {
   formData.append("arquivo", arquivo);
 
   try {
-    const resposta = await fetch("http://192.168.254.200:8000/importacao/preview", {
+    const resposta = await fetch(`${window.location.origin}/importacao/preview`, {
       method: "POST",
       body: formData,
     });
@@ -148,7 +148,7 @@ btnConfirmar.addEventListener("click", async () => {
   formData.append("arquivo", arquivoAtual);
 
   try {
-    const resposta = await fetch("http://192.168.254.200:8000/importacao/confirmar", {
+    const resposta = await fetch(`${window.location.origin}/importacao/confirmar`, {
       method: "POST",
       body: formData,
     });

@@ -1,7 +1,9 @@
+import os
+
 import pyodbc
 
 
-SERVER = r"PEDRO-JA\SQLEXPRESS"
+SERVER = os.getenv("EXAMFLOW_DB_SERVER", r".\SQLEXPRESS")
 DATABASE = "ExamFlow"
 DRIVER = "ODBC Driver 18 for SQL Server"
 

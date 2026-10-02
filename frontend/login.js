@@ -11,7 +11,7 @@ form.addEventListener("submit", async (event) => {
   mensagem.className = "mensagem";
 
   try {
-    const resposta = await fetch("http://192.168.254.200:8000/login", {
+    const resposta = await fetch(`${window.location.origin}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
