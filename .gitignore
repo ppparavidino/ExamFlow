@@ -1,0 +1,16 @@
+# Python runtime artifacts
+__pycache__/
+*.py[cod]
+
+# Local environment and secrets
+.venv/
+.env
+.env.*
+!.env.example
+
+# Sensitive operational data
+*.pdf
+*.xlsx
+*.xls
+*.csv
+*.tsv
